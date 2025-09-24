@@ -1,0 +1,74 @@
+@startuml PlayerMovementSm
+
+/'! $CONFIG : toml
+SmRunnerSettings.transpilerId = "CSharp"
+
+# Inject the C# method implementations directly into the generated class
+RenderConfig.CSharp.ClassCode = """
+    // --- Implementation of methods called by the state machine ---
+    
+    private void SetVelocity(float x, float y)
+    {
+        Console.WriteLine($"Action: Setting velocity to ({x}, {y})");
+    }
+
+    private void UpdateAnimation(string animationName)
+    {
+        Console.WriteLine($"Action: Playing animation '{animationName}'");
+    }
+
+    private void SetMovementDirection(object inputDirection)
+    {
+        Console.WriteLine("Action: Setting movement direction from input");
+    }
+
+    private void UpdateVelocity(object inputDirection)
+    {
+        Console.WriteLine("Action: Updating velocity based on input direction");
+    }
+
+    private void StartAttackAnimation()
+    {
+        Console.WriteLine("Action: Starting attack animation");
+    }
+
+    private void PerformAttack()
+    {
+        Console.WriteLine("Action: Performing attack");
+    }
+
+    private void ResetAttack()
+    {
+        Console.WriteLine("Action: Resetting attack state");
+    }
+
+    // Example fields/properties that might be used
+    private object inputDirection;
+    private bool attackFinished = false;
+"""
+'/
+
+state IDLE {
+  IDLE : enter / SetVelocity(0, 0);
+  IDLE : do / UpdateAnimation("Idle");  
+}
+
+state MOVING {
+  MOVING : enter / SetMovementDirection(inputDirection); 
+  MOVING : do / UpdateVelocity(inputDirection); 
+  MOVING : do / UpdateAnimation("Moving");
+}
+
+state ATTACKING {
+  ATTACKING : enter / StartAttackAnimation();
+  ATTACKING : do / PerformAttack(); 
+  ATTACKING : exit / ResetAttack();
+}
+
+[*] -> IDLE
+IDLE --> MOVING : MOVE_INPUT
+MOVING --> IDLE : STOP_INPUT 
+MOVING --> ATTACKING : ATTACK_INPUT
+ATTACKING --> IDLE : [attackFinished]
+
+@enduml
